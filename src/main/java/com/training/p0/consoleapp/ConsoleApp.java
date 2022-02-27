@@ -104,7 +104,7 @@ public class ConsoleApp {
 		if (user.getIsEmployee())
 			employServices(user.getUserId());
 		else
-			customerServices(user.getUserId());
+			customerServices(user);
 		
 	}
 	
@@ -112,7 +112,7 @@ public class ConsoleApp {
 		System.out.println("<employServices>");
 	}
 	
-	void customerServices(int userId) {
+	void customerServices(User user) {
 		final String[] customerServicesMenu = {
 				"View Accounts Balances",
 				"Open New Account"
@@ -123,10 +123,10 @@ public class ConsoleApp {
 			int choice = doMenu("Customer Services", customerServicesMenu);
 			switch (choice) {
 			case 1:
-				viewAccount(userId);
+				viewAccount(user);
 				break;
 			case 2:
-				openAccount(userId);
+				openAccount(user.getUserId());
 				break;
 			case 9:
 				done = true;
@@ -135,13 +135,17 @@ public class ConsoleApp {
 		} while (!done);
 	}
 
-	private void viewAccount(int userId) {
-		List<AccountInfo> accounts = dBase.viewAccount(userId);
+	private void viewAccount(User user) {
+		List<AccountInfo> accounts = dBase.viewAccount(user.getUserId());
+		System.out.println();
+		System.out.println(" Account");
+		System.out.println("  Number    Balance");
+		System.out.println("--------- ----------");
 		for (AccountInfo account : accounts) {
-			System.out.printf("%5d ", account.getAccountNumber());
-			System.out.printf("%10d", account.getBalance());
+			System.out.printf("%8d", account.getAccountNumber());
+			System.out.printf("  %9d", account.getBalance());
 			if (account.isApproved() == false) 
-				System.out.print("account not approved");
+				System.out.print("  account approval pending");
 			System.out.println();
 		}
 		
