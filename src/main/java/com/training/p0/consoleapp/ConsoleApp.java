@@ -156,8 +156,12 @@ public class ConsoleApp {
 		int amount = Integer.parseInt(results.get(0));
 		if (amount < 0) 
 			System.out.println("Can't open an account with negative balence");
-		else
-			dBase.newAccount(userId, amount);
+		else {
+			if (dBase.newAccount(userId, amount))
+				System.out.println("Account opened successfully");
+			else
+				System.out.println("Error opening account");
+		}
 
 	}
 
