@@ -10,4 +10,8 @@ public interface DBaseDAO {
 	boolean addUser(User user);
 	boolean newAccount(int userId, int amount);
 	List<AccountInfo> viewAccount(int userId);
+	List<AccountInfo> getAccountsPendingApproval();
+	int approveAccounts(List<AccountInfo> accounts);
+	int denyAccounts(List<AccountInfo> accounts);
+	int accountUpdate(int account, int amount);
 }
