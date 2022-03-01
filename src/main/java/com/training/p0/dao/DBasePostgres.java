@@ -1,10 +1,13 @@
 package com.training.p0.dao;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,7 +38,6 @@ public class DBasePostgres implements DBaseDAO {
 		}
 		return user;
 	}
-
 
 	@Override
 	public boolean addUser(User user) {
@@ -223,8 +225,68 @@ public class DBasePostgres implements DBaseDAO {
 
 		if (rows == 0) 
 			return -6; // account not updated
-		return newBalance;
 		
+		if (amount >= 0)
+			logTransaction("Deposit of " + amount + " into " + account);
+		else
+			logTransaction("Withdraw of " + -amount + " from " + account);
+		
+		return newBalance;
 	}
 
+	@Override
+	public int transfer(int sender, int receiver, int amount) {
+		int senderBalance = -1;
+		// int receiverBalance = -1;
+		
+		try {
+			CallableStatement stat = connection.prepareCall("call money_transfer(?,?,?,?,?)");
+			stat.setInt(1, sender);
+			stat.setInt(2, receiver);
+			stat.setInt(3, amount);
+			stat.registerOutParameter(4, Types.INTEGER);
+			stat.setInt(4, -1);
+			stat.registerOutParameter(5, Types.INTEGER);
+			stat.setInt(5,  -1);
+			stat.execute();
+		
+			senderBalance = stat.getInt(4);
+			// receiverBalance = stat.getInt(5);
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		logTransaction("Transfer of " + amount + " from " + sender + " to " + receiver);
+		return senderBalance;
+	}
+
+	private void logTransaction(String msg) {
+		final String sql = "INSERT INTO p0_log VALUES ( now(), ?)";
+		try {
+			PreparedStatement stmt = connection.prepareStatement(sql);
+			stmt.setString(1,  msg);
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+	}
+
+	@Override
+	public List<String> viewTransactions() {
+		List<String> transactions = new LinkedList<String>();
+		final String sql = "SELECT * FROM p0_log";
+		ResultSet results = null;
+		try {
+			Statement stmt = connection.createStatement();
+			results = stmt.executeQuery(sql);
+			while (results.next()) {
+				Date date = results.getDate("time_date");
+				String entry = results.getString("entry");
+				transactions.add(date + " " + entry);
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		return transactions;
+	}
+	
 }

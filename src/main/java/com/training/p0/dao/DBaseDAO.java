@@ -14,4 +14,6 @@ public interface DBaseDAO {
 	int approveAccounts(List<AccountInfo> accounts);
 	int denyAccounts(List<AccountInfo> accounts);
 	int accountUpdate(int account, int amount);
+	int transfer(int sender, int receiver, int amount);
+	List<String> viewTransactions();
 }

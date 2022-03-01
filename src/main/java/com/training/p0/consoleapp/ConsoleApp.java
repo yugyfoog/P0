@@ -26,23 +26,23 @@ public class ConsoleApp {
 			
 		boolean done = false;
 		do {
-			System.out.println();
 			int choice = doMenu("Welcome to Bank of Yugyfoog", startMenu);
 			switch (choice) {
 			case 1:
 				login();
 				break;
 			case 2: 
-				newUser(false);
+				newUser(false);   // new Customer
 				break;
 			case 3:
-				newUser(true);
+				newUser(true);    // new Employee
 				break;
 			case 4:
 				giveHelp();
 				break;
 			case 9:  
 				done = true;
+				break;
 			}
 			
 		} while (!done);
@@ -111,7 +111,8 @@ public class ConsoleApp {
 	void employServices(int userId) {
 		final String[] employeeServicesMenu = {
 				"View Customer's Account",
-				"Approve Accounts"
+				"Approve Accounts",
+				"View Transaction Log"
 		};
 		
 		boolean done = false;
@@ -124,6 +125,9 @@ public class ConsoleApp {
 			case 2:
 				approveAccounts();
 				break;
+			case 3:
+				viewTransactions();
+				break;
 			case 9:
 				done = true;
 				break;
@@ -131,6 +135,16 @@ public class ConsoleApp {
 		} while (!done);
 	}
 	
+	private void viewTransactions() {
+		System.out.println();
+		System.out.println("Transaction Log");
+		System.out.println();
+		List<String> transactions = dBase.viewTransactions();
+		for (String transaction : transactions) {
+			System.out.println(transaction);
+		}
+	}
+
 	private void viewCustomersAccount() {
 		final String[] viewAccountForm = {
 				"Account number: ", "N"
@@ -164,12 +178,17 @@ public class ConsoleApp {
 		List<AccountInfo> approvedList = new LinkedList<AccountInfo>();
 		List<AccountInfo> deniedList = new LinkedList<AccountInfo>();
 		
-		// user name, account number, balance
 		for (AccountInfo account : accounts) {
+			
+			// display account information
+			
 			System.out.println();
 			System.out.println("Account number: " + account.getAccountNumber());
 			System.out.println("Name: " + account.getFullName());
 			System.out.println("Balance: " + account.getBalance());
+			
+			// Ask what to do?
+			
 			System.out.println("(A)pprove, (D)eny, (S)kip");
 			String reply = scanner.next().toUpperCase();
 			do {
@@ -194,10 +213,18 @@ public class ConsoleApp {
 		if (approved == 0 && denied == 0)
 			System.out.println("no accounts changed");
 		else {
-			if (approved != 0)
-				System.out.println(approved + " accounts approved");
-			if (denied != 0)
-				System.out.println(denied + " accounts denied");
+			if (approved != 0) {
+				if (approved == 1)
+					System.out.println("1 account approved");
+				else
+					System.out.println(approved + " accounts approved");
+			}
+			if (denied != 0) {
+				if (denied == 1)
+					System.out.println("1 account denied");
+				else
+					System.out.println(denied + " accounts denied");
+			}
 		}
 	}
 	
@@ -248,21 +275,13 @@ public class ConsoleApp {
 		int receivingAccount = Integer.parseInt(results.get(1));
 		int amount = Integer.parseInt(results.get(2));
 		
+		int balance = dBase.transfer(sendingAccount, receivingAccount, amount);
+		
+		if (balance < 0)
+			System.out.println("money transfer failed");
+		else
+			System.out.println("money transfer successful");
 
-		int error = dBase.accountUpdate(receivingAccount, 0);
-		if (error < 0) {
-			System.out.println("Transfer failed 1: " + error);
-		}
-		else {
-			error = dBase.accountUpdate(sendingAccount, -amount);
-			if (error < 0) {
-				System.out.println("Transfer failed 2: " + error);
-			}
-			else {
-				dBase.accountUpdate(receivingAccount, amount);
-				System.out.println("Transfer successful");
-			}
-		}
 	}
 
 	private void withdraw(User user) {
