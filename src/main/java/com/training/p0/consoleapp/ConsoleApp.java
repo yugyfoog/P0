@@ -4,10 +4,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
+import com.training.p0.dao.AccountInfo;
+import com.training.p0.dao.Credentials;
 import com.training.p0.dao.DBaseDAO;
 import com.training.p0.dao.DBasePostgres;
 import com.training.p0.dao.LoginDAO;
 import com.training.p0.dao.LoginDAOImpl;
+import com.training.p0.dao.User;
 
 public class ConsoleApp {
 
@@ -110,7 +113,7 @@ public class ConsoleApp {
 	
 	void employServices(int userId) {
 		final String[] employeeServicesMenu = {
-				"View Customer's Account",
+				"View Customer's Accounts",
 				"Approve Accounts",
 				"View Transaction Log"
 		};
@@ -120,7 +123,7 @@ public class ConsoleApp {
 			int choice = doMenu("Employee Services", employeeServicesMenu);
 			switch (choice) {
 			case 1:
-				viewCustomersAccount();
+				viewCustomersAccounts();
 				break;
 			case 2:
 				approveAccounts();
@@ -145,13 +148,19 @@ public class ConsoleApp {
 		}
 	}
 
-	private void viewCustomersAccount() {
+	private void viewCustomersAccounts() {
 		final String[] viewAccountForm = {
-				"Account number: ", "N"
+				"User Id: ", "N"
 		};	
 		List<String> results = doForm("View Customer Accounts", viewAccountForm);
 		int userid = Integer.parseInt(results.get(0));
 		List<AccountInfo> accounts = dBase.viewAccount(userid);
+		if (accounts.size() == 0) {
+			System.out.println();
+			System.out.println(userid + " is not a valid customer id");
+			return;
+		}
+		System.out.println();
 		System.out.println(userid + " " + accounts.get(0).getFullName());
 		System.out.println();
 		System.out.println(" Account");
@@ -230,7 +239,7 @@ public class ConsoleApp {
 	
 	void customerServices(User user) {
 		final String[] customerServicesMenu = {
-				"View Accounts Balances",
+				"View Accounts",
 				"Deposit",
 				"Withdraw",
 				"Money Transfer",
@@ -275,13 +284,29 @@ public class ConsoleApp {
 		int receivingAccount = Integer.parseInt(results.get(1));
 		int amount = Integer.parseInt(results.get(2));
 		
+		int sendingUser = dBase.getUserId(sendingAccount);
+		if (sendingUser != user.getUserId()) {
+			System.out.println();
+			System.out.println(sendingAccount + "is not a valid account");
+			return;
+		}
+		
+		if (amount <= 0) {
+			System.out.println();
+			if (amount == 0)
+				System.out.println("Can not transfer zero amount");
+			else
+				System.out.println("Can not transfer a negative amount");
+			return;
+		}
+		
 		int balance = dBase.transfer(sendingAccount, receivingAccount, amount);
 		
+		System.out.println();
 		if (balance < 0)
 			System.out.println("money transfer failed");
 		else
 			System.out.println("money transfer successful");
-
 	}
 
 	private void withdraw(User user) {
@@ -293,18 +318,48 @@ public class ConsoleApp {
 		List<String> results = doForm("Account Withdraw", withdrawForm);
 		int accountNumber = Integer.parseInt(results.get(0));
 		int amount = Integer.parseInt(results.get(1));
-		if (amount < 0) {
+		
+		System.out.println();
+		if (dBase.getUserId(accountNumber) != user.getUserId()) {	
+			System.out.println(accountNumber + " is not a valid account");
+		}
+		else if (amount < 0) {
 			System.out.println("Can't withdraw negative amount");
 		}
 		else {
 			int balance = dBase.accountUpdate(accountNumber, -amount);
-			if (balance < 0)
+			if (balance < 0) {
+				reportError(balance);
 				System.out.println("no withdraw made");
+			}
 			else
 				System.out.println("new balance: " + balance);
 		}
 	}
 
+	private void reportError(int code) {
+		switch (code) {
+		case DBaseDAO.ERROR_ACCOUNT_NOT_APPROVED:
+			System.out.println("Account not approved yet.");
+			break;
+		case DBaseDAO.ERROR_ACCOUNT_NOT_FOUND:
+			System.out.println("Account does not exist.");
+			break;
+		case DBaseDAO.ERROR_ACCOUNT_NOT_UPDATED:
+			System.out.println("Account not updated");
+			break;
+		case DBaseDAO.ERROR_NEGATIVE_BALANCE:
+			System.out.println("Withdraw would result in negative balance");
+			break;
+		case DBaseDAO.ERROR_SQL_ERROR:
+			System.out.println("Internal error");
+			break;
+		default:
+			System.out.println("Error: " + code);
+			break;
+		}
+	}
+	
 	private void deposit(User user) {
 		final String[] depositForm = {
 				"Account", "N",
@@ -312,16 +367,22 @@ public class ConsoleApp {
 		};
 		
 		List<String> results = doForm("Account Deposit", depositForm);
-		int account_number = Integer.parseInt(results.get(0));
+		int accountNumber = Integer.parseInt(results.get(0));
 		int amount = Integer.parseInt(results.get(1));
 		
-		if (amount < 0) {
+		System.out.println();
+		if (dBase.getUserId(accountNumber) != user.getUserId()) {	
+			System.out.println(accountNumber + " is not a valid account");
+		}
+		else if (amount < 0) {
 			System.out.println("Can't deposit negative amount");
 		}
 		else {
-			int balance = dBase.accountUpdate(account_number, amount);
-			if (balance < 0)
+			int balance = dBase.accountUpdate(accountNumber, amount);
+			if (balance < 0) {
+				reportError(balance);
 				System.out.println("no deposit made");
+			}
 			else
 				System.out.println("new balance: " + balance);
 		}
@@ -340,7 +401,6 @@ public class ConsoleApp {
 				System.out.print("  account approval pending");
 			System.out.println();
 		}
-		
 	}
 
 	private void openAccount(int userId) {
@@ -351,7 +411,7 @@ public class ConsoleApp {
 		List<String> results = doForm("Open Account", openAccountForm);
 		int amount = Integer.parseInt(results.get(0));
 		if (amount < 0) 
-			System.out.println("Can't open an account with negative balence");
+			System.out.println("Can't open an account with negative balance");
 		else {
 			if (dBase.newAccount(userId, amount))
 				System.out.println("Account opened successfully");

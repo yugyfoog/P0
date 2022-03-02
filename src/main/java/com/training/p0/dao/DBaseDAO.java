@@ -2,10 +2,13 @@ package com.training.p0.dao;
 
 import java.util.List;
 
-import com.training.p0.consoleapp.AccountInfo;
-import com.training.p0.consoleapp.User;
-
 public interface DBaseDAO {
+	// error codes
+	public static final int ERROR_NEGATIVE_BALANCE = -1;
+	public static final int ERROR_ACCOUNT_NOT_FOUND = -2;
+	public static final int ERROR_SQL_ERROR = -3;
+	public static final int ERROR_ACCOUNT_NOT_APPROVED = -5;
+	public static final int ERROR_ACCOUNT_NOT_UPDATED = -6;
 	User getUser(int userId);
 	boolean addUser(User user);
 	boolean newAccount(int userId, int amount);
@@ -15,5 +18,6 @@ public interface DBaseDAO {
 	int denyAccounts(List<AccountInfo> accounts);
 	int accountUpdate(int account, int amount);
 	int transfer(int sender, int receiver, int amount);
+	int getUserId(int accountNumber);
 	List<String> viewTransactions();
 }

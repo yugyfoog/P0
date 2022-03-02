@@ -5,8 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import com.training.p0.consoleapp.Credentials;
-
 public class LoginDAOImpl implements LoginDAO {
 	Connection connection = PostgresConnection.getConnection();
 

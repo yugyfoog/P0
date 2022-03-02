@@ -1,4 +1,4 @@
-package com.training.p0.consoleapp;
+package com.training.p0.dao;
 
 import java.util.List;
 

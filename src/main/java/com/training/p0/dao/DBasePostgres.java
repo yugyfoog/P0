@@ -12,9 +12,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.training.p0.consoleapp.AccountInfo;
-import com.training.p0.consoleapp.User;
-
 public class DBasePostgres implements DBaseDAO {
 	Connection connection = PostgresConnection.getConnection();
 	
@@ -91,7 +88,9 @@ public class DBasePostgres implements DBaseDAO {
 				         + "NATURAL JOIN "
 						 + "    p0_accounts "
 				         + "WHERE "
-						 + "    userid=?";
+						 + "    userid=?"
+				         + "ORDER BY "
+						 + "    account_number;";
 		try {
 			stmt = connection.prepareStatement(sql);
 			stmt.setInt(1, userId);
@@ -182,8 +181,7 @@ public class DBasePostgres implements DBaseDAO {
 
 	@Override
 	public int accountUpdate(int account, int amount) {
-		// get account information
-		
+
 		final String sql1 = "SELECT balance, approved FROM p0_accounts WHERE account_number=?";
 		ResultSet results = null;
 		int queryBalance;
@@ -197,18 +195,18 @@ public class DBasePostgres implements DBaseDAO {
 				queryApproved = results.getBoolean("approved");
 			}
 			else
-				return -2; // account not found;
+				return ERROR_ACCOUNT_NOT_FOUND;
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
-			return -3;  // unknown error
+			return ERROR_SQL_ERROR;
 		}
 		
 		if (queryApproved == false)
-			return -5; // account not approved yet
+			return ERROR_ACCOUNT_NOT_APPROVED;
 		
 		int newBalance = queryBalance + amount;
 		if (newBalance < 0)
-			return -1; // negative balance!
+			return ERROR_NEGATIVE_BALANCE; // negative balance!
 		
 		// update account
 		
@@ -224,7 +222,7 @@ public class DBasePostgres implements DBaseDAO {
 		}
 
 		if (rows == 0) 
-			return -6; // account not updated
+			return ERROR_ACCOUNT_NOT_UPDATED;
 		
 		if (amount >= 0)
 			logTransaction("Deposit of " + amount + " into " + account);
@@ -237,7 +235,9 @@ public class DBasePostgres implements DBaseDAO {
 	@Override
 	public int transfer(int sender, int receiver, int amount) {
 		int senderBalance = -1;
-		// int receiverBalance = -1;
+	
+		if (amount <= 0)
+			return -1;
 		
 		try {
 			CallableStatement stat = connection.prepareCall("call money_transfer(?,?,?,?,?)");
@@ -249,7 +249,6 @@ public class DBasePostgres implements DBaseDAO {
 			stat.registerOutParameter(5, Types.INTEGER);
 			stat.setInt(5,  -1);
 			stat.execute();
-		
 			senderBalance = stat.getInt(4);
 			// receiverBalance = stat.getInt(5);
 		} catch (SQLException e) {
@@ -259,6 +258,24 @@ public class DBasePostgres implements DBaseDAO {
 		return senderBalance;
 	}
 
+	@Override
+	public int getUserId(int accountNumber) {
+		final String sql = "SELECT userid FROM p0_accounts WHERE account_number=?";
+		ResultSet results;
+		int userId = -1;
+		try {
+			PreparedStatement stmt = connection.prepareStatement(sql);
+			stmt.setInt(1, accountNumber);
+			results = stmt.executeQuery();
+			if (results.next()) {
+				userId = results.getInt("userid");
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		return userId;
+	}
+	
 	private void logTransaction(String msg) {
 		final String sql = "INSERT INTO p0_log VALUES ( now(), ?)";
 		try {

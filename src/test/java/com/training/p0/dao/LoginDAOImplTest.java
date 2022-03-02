@@ -11,8 +11,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import com.training.p0.consoleapp.Credentials;
-
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
 
 class LoginDAOImplTest {
