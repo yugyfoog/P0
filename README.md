@@ -1,4 +1,4 @@
-# Project Zero
+### Project Zero
 # Console Banking Application
 
 Banking operations application written in Java.
