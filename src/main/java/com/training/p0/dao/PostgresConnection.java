@@ -34,7 +34,6 @@ public class PostgresConnection {
 		// load driver
 		
 		try {
-			// Class.forName("org.postgresql.Driver");
 			Class.forName(properties.getProperty("driver"));
 		} catch (ClassNotFoundException e) {
 			System.out.println("Unable to load driver");

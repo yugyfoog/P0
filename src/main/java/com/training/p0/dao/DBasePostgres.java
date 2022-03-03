@@ -74,7 +74,7 @@ public class DBasePostgres implements DBaseDAO {
 	}
 
 	@Override
-	public List<AccountInfo> viewAccount(int userId) {
+	public List<AccountInfo> viewAccounts(int userId) {
 		PreparedStatement stmt;
 		List<AccountInfo> entries = new ArrayList<AccountInfo>();
 		final String sql = "SELECT "
@@ -111,6 +111,41 @@ public class DBasePostgres implements DBaseDAO {
 		return entries;
 	}
 
+	@Override
+	public AccountInfo getAccountInfo(int accountNumber) {
+		final String sql = "SELECT "
+		         + "    account_number, "
+		         + "    userid, "
+		         + "    first_name, "
+		         + "    last_name, "
+		         + "    balance, "
+		         + "    approved "
+		         + "FROM "
+		         + "    p0_users "
+		         + "NATURAL JOIN "
+		         + "    p0_accounts "
+		         + "WHERE "
+		         + "    account_number=?";
+		AccountInfo account = null;
+		try {
+			PreparedStatement stmt = connection.prepareStatement(sql);
+			stmt.setInt(1, accountNumber);
+			ResultSet results = stmt.executeQuery();
+			if (results.next()) {	
+				account = new AccountInfo(
+						results.getInt("account_number"),
+						results.getInt("userid"),
+						results.getString("first_name"),
+						results.getString("last_name"),
+						results.getInt("balance"),
+						results.getBoolean("approved"));
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		return account;
+	}
+	
 	@Override
 	public List<AccountInfo> getAccountsPendingApproval() {
 		final String sql = "SELECT "
