@@ -8,7 +8,7 @@ Allows bank employees to maintain customer accounts.
 
 > Technology Used
 > - Eclipse IDE
-> - Maven Build System
+> - Maven build system
 > - JDBC Java library for accessing databases
 > - PostgreSQL data base server
 > - JUnit testing framework
