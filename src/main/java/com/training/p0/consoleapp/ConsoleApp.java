@@ -365,6 +365,11 @@ public class ConsoleApp {
 			return;
 		}
 		
+		if (!account.isApproved()) {
+			System.out.println("account " + accountNumber + " not yet approved");
+			return;
+		}
+		
 		int amount = Integer.parseInt(results.get(1));
 		if (amount < 0) {
 			System.out.println("Can't withdraw negative amount");
@@ -401,6 +406,11 @@ public class ConsoleApp {
 		
 		if (account.getUserId() != user.getUserId()) {
 			System.out.println("invalid account number: " + accountNumber);
+			return;
+		}
+				
+		if (!account.isApproved()) {
+			System.out.println("account " + accountNumber + " not yet approved");
 			return;
 		}
 		
